@@ -5,6 +5,8 @@ Huge Image Zoom Widget with HTML Canvas
 
 # Getting Started
 
+Website: http://adamcavendish.github.io/CanvasZoomify/.
+
 * Step 0:
 
 Prepare the image:
