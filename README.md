@@ -116,4 +116,11 @@ Any config will be its default values if not set
 }
 ```
 
+# Documentation
+
+You can browse the documentation online at http://adamcavendish.github.io/CanvasZoomify/. You can also get an offline version of the documentation by checking out the gh-pages branch. To avoid overwriting the current directory, you can clone the gh-pages branch into a subdirectory like doc/html:
+
+git clone https://github.com/adamcavendish/CanvasZoomify.git --branch=gh-pages doc/html
+
+After issuing this, doc/html will contain exactly the same static website that's available online. Note that doc/html is automatically ignored by Git so updating the documentation won't pollute your index.
 
