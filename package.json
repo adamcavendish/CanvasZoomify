@@ -1,0 +1,28 @@
+{
+  "name": "canvaszoomify",
+  "description": "Huge Image Zoom Widget with HTML Canvas",
+  "version": "1.0.0",
+  "author": "Adam Basfop Cavendish <coldsnowbee@163.com>",
+  "contributors": [],
+  "license": "MIT",
+  "repository": "adamcavendish/CanvasZoomify",
+  "homepage": "",
+  "keywords": [
+    "CanvasZoomify",
+    "canvas",
+    "image",
+    "large image",
+    "zoom",
+    "web"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.4",
+    "hammerjs": "~2.0.6",
+    "underscore": "~1.8.3"
+  },
+  "files": [
+    "README.md",
+    "CanvasZoomify.js",
+    "CanvasZoomifySlicer.py"
+  ]
+}
