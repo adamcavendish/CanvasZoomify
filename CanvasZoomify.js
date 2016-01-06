@@ -28,6 +28,20 @@
     return ret;
   };
 
+  // ensure that `e2` has the same action as `e1`
+  // `e1` is not edited
+  var syncEventObject = function(e1, e2) {
+    if (e1.isDefaultPrevented()) {
+      e2.preventDefault();
+    }
+    if (e1.isImmediatePropagationStopped()) {
+      e2.stopImmediatePropagation();
+    }
+    if (e1.isPropagationStopped()) {
+      e2.stopPropagation();
+    }
+  };
+
   function CanvasZoomify(el, config) {
     this.config = $.extend({}, CanvasZoomify.DEFAULTS, config,
                            typeof config === 'object' && config);
@@ -39,7 +53,7 @@
     this.offsetY = checkRequired(this.config, 'offsetY');
     this.scale = checkRequired(this.config, 'scale');
     this.scaleStep = checkRequired(this.config, 'scaleStep');
-    this.scaleMax = checkRequired(this.config, 'scaleMax');
+    this.scaleMax = this.config['scaleMax'];
 
     if (this.isDebug) {
       console.log('CanvasZoomify Debug: ', this.isDebug);
@@ -55,7 +69,7 @@
     this.context = this.canvas.getContext('2d');
     this.tileManager = new TileManager(this, this.config);
 
-    this.imageLevel = 0;
+    this.imageLevel = -1;
 
     this.touchEventManager = new Hammer(this.canvas);
     this.touchEventManager.get('pan').set({ direction: Hammer.DIRECTION_ALL });
@@ -83,41 +97,41 @@
   }
 
   CanvasZoomify.DEFAULTS = {
-    isDebug: false,
-    levelValues: null,
-    rowsPerLevel: null,
-    colsPerLevel: null,
-    tileWidth: null,
-    tileHeight: null,
-    tilesBasePath: null,
-    tileNamePrefix: null,
-    tileImageType: 'jpg',
-    tiles: null,
+    "isDebug": false,       // enable or not debug mode
+    "levelValues": null,    // level values, must be 2^n, also the level directories name (required)
+    "rowsPerLevel": null,   // number of tile rows each level (required)
+    "colsPerLevel": null,   // number of tile colums each level (required)
+    "tileWidth": null,      // the width of each tile (required)
+    "tileHeight": null,     // the height of each tile (required)
+    "tilesBasePath": null,  // the base path of the tile files (required)
+    "tileNamePrefix": null, // the tile files prefix name (required)
+    "tileImageType": "jpg", // the tile image type, usually "jpg"
+    "tiles": null,          // use the default generated tile file path
 
-    width: null,
-    height: null,
-    offsetX: 0,
-    offsetY: 0,
-    scale: 1.0,
-    scaleStep: 1.1,
-    scaleMax: 16.0,
+    "width": 640,           // the canvas width
+    "height": 480,          // the canvas height
+    "offsetX": 0,           // the starting image offset in x axis
+    "offsetY": 0,           // the starting image offset in y axis
+    "scale": 0,             // the starting image scale, 0 for auto mode: Scale to fit the image in the canvas
+    "scaleStep": 1.1,       // each pinch or mouse scroll, will cause `scale = scale * scaleStep`
+    "scaleMax": 16.0,       // the max scale, setting it to null will enable infinite scale
 
-    afterInit: function() {},
+    "afterInit": function() {},      // triggered right after CanvasZoomify initialization
 
-    onCz_update: function(ev) {},
-    onCz_clear: function(ev) {},
-    onCz_repaint: function(ev) {},
+    "onCz_update": function(ev) {},  // triggered every time the canvas updates its parameter
+    "onCz_clear": function(ev) {},   // triggered every time the canvas clears
+    "onCz_repaint": function(ev) {}, // triggered every time the canvas repaints
 
-    onPanstart: function(ev) {},
-    onPanmove: function(ev) {},
-    onPinchstart: function(ev) {},
-    onPinch: function(ev) {},
+    "onPanstart": function(ev) {},   // triggered every time the canvas is at its panning start
+    "onPanmove": function(ev) {},    // triggered every time the canvas is moved by panning
+    "onPinchstart": function(ev) {}, // triggered every time the canvas is at its pinching start
+    "onPinch": function(ev) {},      // triggered every time the canvas is scaled by pinching
 
-    onMousedown: function(ev) {},
-    onMouseup: function(ev) {},
-    onMousemove: function(ev) {},
-    onMousewheel: function(ev) {},
-    onDOMMouseScroll: function(ev) {}
+    "onMousedown": function(ev) {},  // triggered every time the canvas is on its mousedown
+    "onMouseup": function(ev) {},    // triggered every time the canvas is on its mouseup
+    "onMousemove": function(ev) {},  // triggered every time the canvas is on its mousemove
+    "onMousewheel": function(ev, customDeltaScale) {},    // triggered every time the canvas is scaled by mouse wheel
+    "onDOMMouseScroll": function(ev, customDeltaScale) {} // triggered every time the canvas is scaled by mouse wheel (only for firefox)
   };
 
   CanvasZoomify.EVENTS = {
@@ -223,6 +237,7 @@
 
   CanvasZoomify.prototype._getInitEvents_mouse = function(evName) {
     return function(canvasEv) {
+      var ret = true;
       var args = Array.prototype.slice.call(arguments, 1);
       // extend to get the correct event name and event info,
       // but still perserves canvas's info
@@ -230,22 +245,32 @@
       args.unshift(canvasZoomifyEvent); // prepend `canvasZoomifyEvent` to args list
       var userHandler = this.config[CanvasZoomify._getHandlerName(evName)];
       if (userHandler) {
-        userHandler.apply(this.config, args);
+        var userHandlerRet = userHandler.apply(this.config, args);
+        if (userHandlerRet == false) {
+          ret = false;
+        }
       }
+      syncEventObject(canvasZoomifyEvent, canvasEv);
       if (canvasZoomifyEvent.isDefaultPrevented()) {
         canvasEv.preventDefault();
-        return;
+        return ret;
       }
       // Call the default handler
       var defaultHandler = this[CanvasZoomify._getDefaultHandlerName(evName)];
       if (defaultHandler) {
-        defaultHandler.apply(this, args);
+        var defaultHandlerRet = defaultHandler.apply(this, args);
+        if (ret == true && defaultHandlerRet == false) {
+          ret = false;
+        }
       }
+      syncEventObject(canvasZoomifyEvent, canvasEv);
+      return ret;
     }.bind(this);
   };
 
   CanvasZoomify.prototype._getInitEvents_multitouch = function(evName) {
     return function(canvasEv) {
+      var ret = true;
       var args = Array.prototype.slice.call(arguments, 1);
       // extend to get the correct event name and event info,
       // but still perserves canvas's info
@@ -253,17 +278,26 @@
       args.unshift(canvasZoomifyEvent); // prepend `canvasZoomifyEvent` to args list
       var userHandler = this.config[CanvasZoomify._getHandlerName(evName)];
       if (userHandler) {
-        userHandler.apply(this.config, args);
+        var userHandlerRet = userHandler.apply(this.config, args);
+        if (userHandlerRet == false) {
+          ret = false;
+        }
       }
+      syncEventObject(canvasZoomifyEvent, canvasEv);
       if (canvasZoomifyEvent.isDefaultPrevented()) {
         canvasEv.preventDefault();
-        return;
+        return ret;
       }
       // Call the default handler
       var defaultHandler = this[CanvasZoomify._getDefaultHandlerName(evName)];
       if (defaultHandler) {
-        defaultHandler.apply(this, args);
+        var defaultHandlerRet = defaultHandler.apply(this, args);
+        if (ret == true && defaultHandlerRet == false) {
+          ret = false;
+        }
       }
+      syncEventObject(canvasZoomifyEvent, canvasEv);
+      return ret;
     }.bind(this);
   };
 
@@ -272,6 +306,26 @@
   };
 
   CanvasZoomify.prototype.onCz_update_default = function(ev) {
+    // auto scale to fit the whole canvas
+    if (this.scale == 0) {
+      var tw = this.tileManager.tileWidth;
+      var th = this.tileManager.tileHeight;
+      var rpl = this.tileManager.rowsPerLevel;
+      var cpl = this.tileManager.colsPerLevel;
+      var autoScaleWidth = this.canvasWidth / (tw*cpl);
+      var autoScaleHeight = this.canvasHeight / (th*rpl);
+      if (autoScaleWidth < autoScaleHeight) {
+        this.scale = autoScaleWidth;
+        this.offsetY = Math.round(
+          (this.canvasHeight - (autoScaleWidth*th*rpl))/2);
+      } else {
+        this.scale = autoScaleHeight;
+        this.offsetX = Math.round(
+          (this.canvasWidth - (autoScaleHeight*tw*cpl))/2);
+      }
+    }
+
+    // find the optimal image level
     var level = _.findIndex(this.tileManager.levelValues, function(levelV) { return levelV >= this.scale; }.bind(this));
     if (level == -1) {
       // Otherwise, the greatest level
@@ -434,6 +488,12 @@
     this.trigger('cz_update');
     this.trigger('cz_clear');
     this.trigger('cz_repaint');
+
+    if (ev.preventDefault) {
+      ev.preventDefault();
+    }
+
+    return false;
   };
 
   CanvasZoomify.prototype.onMousedown_default = function(ev) {
@@ -519,7 +579,8 @@
     if (ev.preventDefault) {
       ev.preventDefault();
     }
-    ev.returnValue = false;
+
+    return false;
   };
 
   CanvasZoomify.prototype.onDOMMouseScroll_default = CanvasZoomify.prototype.onMousewheel_default;

@@ -4,7 +4,7 @@ import sys
 import json
 
 info_message = \
-'''CanvasZoomifySlicer usage: CanvasZoomifySlicer [RawImagePath] [BaseDir] [Prefix] [Levels] [SliceRows] [SliceCols]
+'''CanvasZoomifySlicer usage: python CanvasZoomifySlicer.py [RawImagePath] [BaseDir] [Prefix] [Levels] [SliceRows] [SliceCols]
 
 example: CanvasZoomifySlicer 'MyMapRaw.jpg' 'images/MyMap/' 'Map' 4 4 2
     it will create a series of levels of images in format of
@@ -60,6 +60,7 @@ if __name__ == '__main__':
     image_quality = 70
     tile_width = None
     tile_height = None
+    scale = 1.0
 
     base_dir = os.path.abspath(base_dir_path)
     if not os.path.exists(base_dir):
@@ -86,18 +87,17 @@ if __name__ == '__main__':
     raw_image.close()
 
     # Prepare the output values
-    output =                                                       \
-      '{\n'                                                        \
-    + '    isDebug: false,\n'                                      \
-    + '    levelValues: {},\n'.format(json.dumps(level_values))    \
-    + '    rowsPerLevel: {},\n'.format(json.dumps(slice_rows))     \
-    + '    colsPerLevel: {},\n'.format(json.dumps(slice_cols))     \
-    + '    tileWidth: {},\n'.format(json.dumps(tile_width))        \
-    + '    tileHeight: {},\n'.format(json.dumps(tile_height))      \
-    + '    tilesBasePath: {},\n'.format(json.dumps(base_dir_path)) \
-    + '    tileNamePrefix: {},\n'.format(json.dumps(prefix))       \
-    + '    tileImageType: {},\n'.format(json.dumps(image_type))    \
-    + '    tiles: null,\n'                                         \
+    output =                                                         \
+      '{\n'                                                          \
+    + '    "isDebug": false,\n'                                      \
+    + '    "levelValues": {},\n'.format(json.dumps(level_values))    \
+    + '    "rowsPerLevel": {},\n'.format(json.dumps(slice_rows))     \
+    + '    "colsPerLevel": {},\n'.format(json.dumps(slice_cols))     \
+    + '    "tileWidth": {},\n'.format(json.dumps(tile_width))        \
+    + '    "tileHeight": {},\n'.format(json.dumps(tile_height))      \
+    + '    "tilesBasePath": {},\n'.format(json.dumps(base_dir_path)) \
+    + '    "tileNamePrefix": {},\n'.format(json.dumps(prefix))       \
+    + '    "tileImageType": {},\n'.format(json.dumps(image_type))    \
     + '}'
     print(output)
 
