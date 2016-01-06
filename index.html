@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <link href="//cdn.bootcss.com/highlight.js/9.0.0/styles/default.min.css" rel="stylesheet">
+    <title>Canvas Zoomify Guide</title>
+    <style>
+      .header {
+        position: relative;
+        padding: 30px 0;
+        color: #ffffff;
+        text-shadow: 0 1px 0 rgba(0,0,0,.1);
+        background-color: #323232;
+        background-image: linear-gradient(to bottom,#323232 0,#707070 100%);
+      }
+      .mycanvaszoomify {
+        text-align: center;
+      }
+      .mycanvaszoomify canvas {
+        border: solid;
+        border-color: #000;
+      }
+      h1 {
+        font-size: 42px;
+      }
+      h2 {
+        font-size: 36px;
+      }
+      h3 {
+        font-size: 30px;
+      }
+      p {
+        color: #23527c;
+        font-size: 16px;
+      }
+      pre {
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="container theme-showcase" role="main">
+        <h1>Canvas Zoomify</h1>
+        <h3>Huge Image Zoom Widget with HTML Canvas</h3>
+        <hr/>
+      </div>
+    </div>
+
+    <div class="container theme-showcase" role="main">
+      <div>
+        <h2>Getting Started</h2>
+        <ul>
+          <h2><li>Step 0:</li></h2>
+          <p>Prepare the image:</p>
+          <pre><code class="shell">python CanvasZoomifySlicer.py 'images/Huge1.jpg' 'img/Huge1-slices/' 'MyHugeSlice' 4 4 2</code></pre>
+          <p>Meaning of the command line arguments:</p>
+          <pre><code class="shell">CanvasZoomifySlicer usage: python CanvasZoomifySlicer.py [RawImagePath] [BaseDir] [Prefix] [Levels] [SliceRows] [SliceCols]</code></pre>
+          <br/>
+          <p>Output:</p>
+          <pre><code class="json">{
+    "isDebug": false,
+    "levelValues": [1, 2, 4, 8],
+    "rowsPerLevel": 4,
+    "colsPerLevel": 2,
+    "tileWidth": 100,
+    "tileHeight": 37,
+    "tilesBasePath": "examples/img/Huge1-slices/",
+    "tileNamePrefix": "MyHugeSlice",
+    "tileImageType": "jpg",
+}
+</code></pre>
+
+          <h2><li>Step 1:</li></h2>
+          <p>Add following div into your html code: </p>
+          <p>CanvasZoomify just need an element, so choose your own class or id is fine</p>
+          <pre><code id="basic-html" class="html"></code></pre>
+
+          <h2><li>Step 2:</li></h2>
+          <p>Add a new CanvasZoomify to your js code:</p>
+          <pre><code class="javascript">var cz = new CanvasZoomify($('.mycanvaszoomify'), /* config json */);</code></pre>
+          <p>Just use the python script's output as the config, and it'll just work! </p>
+          <pre><code class="javascript">var cz = new CanvasZoomify(
+  $('.mycanvaszoomify'),
+  {
+    "isDebug": false,
+    "levelValues": [1, 2, 4, 8],
+    "rowsPerLevel": 4,
+    "colsPerLevel": 2,
+    "tileWidth": 100,
+    "tileHeight": 37,
+    "tilesBasePath": "examples/img/Huge1-slices/",
+    "tileNamePrefix": "MyHugeSlice",
+    "tileImageType": "jpg",
+  }
+);</code></pre>
+        </ul>
+      </div>
+
+      <div class="mycanvaszoomify"></div>
+      <hr/>
+
+      <div>
+        <h2>Default Configurations for CanvasZoomify</h2>
+        <p>Any config will be its default values if not set</p>
+        <pre><code class="javascript">{
+    "isDebug": false,       // enable or not debug mode
+    "levelValues": null,    // level values, must be 2^n, also the level directories name (required)
+    "rowsPerLevel": null,   // number of tile rows each level (required)
+    "colsPerLevel": null,   // number of tile colums each level (required)
+    "tileWidth": null,      // the width of each tile (required)
+    "tileHeight": null,     // the height of each tile (required)
+    "tilesBasePath": null,  // the base path of the tile files (required)
+    "tileNamePrefix": null, // the tile files prefix name (required)
+    "tileImageType": "jpg", // the tile image type, usually "jpg"
+    "tiles": null,          // use the default generated tile file path
+
+    "width": 640,           // the canvas width
+    "height": 480,          // the canvas height
+    "offsetX": 0,           // the starting image offset in x axis
+    "offsetY": 0,           // the starting image offset in y axis
+    "scale": 0,             // the starting image scale, 0 for auto mode: Scale to fit the image in the canvas
+    "scaleStep": 1.1,       // each pinch or mouse scroll, will cause `scale = scale * scaleStep`
+    "scaleMax": 16.0,       // the max scale, setting it to null will enable infinite scale
+
+    "afterInit": function() {},      // triggered right after CanvasZoomify initialization
+
+    "onCz_update": function(ev) {},  // triggered every time the canvas updates its parameter
+    "onCz_clear": function(ev) {},   // triggered every time the canvas clears
+    "onCz_repaint": function(ev) {}, // triggered every time the canvas repaints
+
+    "onPanstart": function(ev) {},   // triggered every time the canvas is at its panning start
+    "onPanmove": function(ev) {},    // triggered every time the canvas is moved by panning
+    "onPinchstart": function(ev) {}, // triggered every time the canvas is at its pinching start
+    "onPinch": function(ev) {},      // triggered every time the canvas is scaled by pinching
+
+    "onMousedown": function(ev) {},  // triggered every time the canvas is on its mousedown
+    "onMouseup": function(ev) {},    // triggered every time the canvas is on its mouseup
+    "onMousemove": function(ev) {},  // triggered every time the canvas is on its mousemove
+    "onMousewheel": function(ev, customDeltaScale) {},    // triggered every time the canvas is scaled by mouse wheel
+    "onDOMMouseScroll": function(ev, customDeltaScale) {} // triggered every time the canvas is scaled by mouse wheel (only for firefox)
+}</code></pre>
+      </div>
+    </div>
+
+    <script src="//cdn.bootcss.com/jquery/2.1.4/jquery.min.js"></script>
+    <script src="//cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script src="//cdn.bootcss.com/underscore.js/1.8.3/underscore-min.js"></script>
+    <script src="//cdn.bootcss.com/hammer.js/2.0.6/hammer.min.js"></script>
+    <script src="//cdn.bootcss.com/highlight.js/9.0.0/highlight.min.js"></script>
+    <script src="//cdn.bootcss.com/highlight.js/9.0.0/languages/xml.min.js"></script>
+    <script src="//cdn.bootcss.com/highlight.js/9.0.0/languages/css.min.js"></script>
+    <script src="//cdn.bootcss.com/highlight.js/9.0.0/languages/json.min.js"></script>
+    <script src="//cdn.bootcss.com/highlight.js/9.0.0/languages/javascript.min.js"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+
+    <script src="../CanvasZoomify.js"></script>
+    <script>
+      $(document).ready(function() {
+        var basic_html = window.hljs.highlightAuto('<div class="mycanvaszoomify"></div>');
+        $("#basic-html").append(basic_html.value);
+      });
+
+      var levelValues = [1,2,4,8];
+      var rowsPerLevel = 4;
+      var colsPerLevel = 2;
+      var tileWidth = 360, tileHeight = 252;
+
+      var cz = new CanvasZoomify(
+        $('.mycanvaszoomify'),
+        {
+          "isDebug": false,
+          "levelValues": [1, 2, 4, 8],
+          "rowsPerLevel": 4,
+          "colsPerLevel": 2,
+          "tileWidth": 100,
+          "tileHeight": 37,
+          "tilesBasePath": "examples/img/Huge1-slices/",
+          "tileNamePrefix": "MyHugeSlice",
+          "tileImageType": "jpg",
+        }
+      );
+    </script>
+  </body>
+</html>
